@@ -8,12 +8,18 @@ import FogOSSecurity.Role;
 import FogOSSecurity.SecureFlexIDSession;
 import com.sun.corba.se.impl.protocol.giopmsgheaders.LocateReplyOrReplyMessage;
 
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.logging.Level;
+import java.security.Security;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class Main {
     private static final String TAG = "FogOSSecureInitiator";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 	    FlexIDFactory factory = new FlexIDFactory();
 	    String addr = "127.0.0.1";
 	    int port = 5555;
@@ -37,16 +43,34 @@ public class Main {
         System.out.println("Identity");
         System.out.println("{ " + byteArrayToHex(peer.getIdentity()) + " }");
 
+
+
+        Instant start  = Instant.now();
+        int ret;
+
         java.util.logging.Logger.getLogger(TAG).log(Level.INFO, "Start: SecureInitiator");
 	    SecureFlexIDSession secureFlexIDSession = new SecureFlexIDSession(Role.INITIATOR, id, peer);
         java.util.logging.Logger.getLogger(TAG).log(Level.INFO, "After initializing SecureFlexIDSession");
-	    secureFlexIDSession.doHandshake();
+
+        start  = Instant.now();
+
+        ret = secureFlexIDSession.doHandshake(0);
+        Instant finish  = Instant.now();
+
+        long timeElapsed = Duration.between(start, finish).toMillis();
+        System.out.println("HANDSHAKE TIME::::::::: " + timeElapsed);
+
+
+        System.out.println("HADNSHAKE DONE");
+
 
         // TODO: Remove this Test Code when the implementation for the handshake is complete.
-	    secureFlexIDSession.getSecurityParameters().setMasterSecret(masterKey);
+	    //secureFlexIDSession.getSecurityParameters().setMasterSecret(masterKey);
 
 	    // Send the test message
 	    secureFlexIDSession.send("Hello");
+
+        secureFlexIDSession.close();
     }
 
     static String byteArrayToHex(byte[] a) {
